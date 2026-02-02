@@ -1,70 +1,96 @@
-# pnpm-workspace.fish 🚀
+# fish-aliases
 
-A professional Fish shell plugin for managing `pnpm` workspaces with `fzf` interactivity.
+Small, focused Fish shell helpers:
 
-## 📋 Requirements
+- `pnpm` workspace helpers (`pnf`, `pnx`, `pnc`) with `fzf` selection
+- command-line prefix toggling + keybindings (`with_prefix`, `with_prefix_bind`)
+- a ready-made proxychains keybind preset
 
-- **[fzf](https://github.com/junegunn/fzf)**: Command-line fuzzy finder.
-- **[jq](https://stedolan.github.io/jq/)**: JSON processor.
-- **[Nerd Fonts](https://www.nerdfonts.com/)**: Required for icons (, ◆, ★). Ensure your terminal emulator uses a Nerd Font (e.g., _JetBrainsMono Nerd Font_).
+## Requirements
 
----
+- **Fish**: interactive shell
+- **fzf**: used by `pnf` and `pnx`
+- **jq**: used to extract the current package name in `_pnpm_get_projects`
+- **pnpm**: required for workspace discovery and execution
+- **find**: used by `pnc`
+- **Nerd Font (optional)**: improves icons in `pnf` (``, `◆`, `★`)
 
-## 📦 Installation
+## Installation
 
-### Using [Fisher](https://github.com/jorgebucaran/fisher) (Recommended)
-
-Add this to your `~/.config/fish/fish_plugins` or run:
+### Fisher (recommended)
 
 ```fish
 fisher install pourdaavar/fish-aliases
-
 ```
 
-### Using [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish)
+### Oh My Fish
 
 ```fish
 omf install https://github.com/pourdaavar/fish-aliases
-
 ```
 
-### Manual Installation
+### Manual
 
-Copy the files into your fish config:
+- copy `functions/*` → `~/.config/fish/functions/`
+- copy `conf.d/*` → `~/.config/fish/conf.d/`
+- copy `completions/*` → `~/.config/fish/completions/`
+- restart Fish
 
-1. Place files in `~/.config/fish/functions/` and `~/.config/fish/conf.d/`.
-2. Restart your shell.
+## What’s included (by file)
 
----
+### pnpm workspace helpers
 
-## ✨ Features
+- **`functions/_pnpm_get_projects.fish`**: lists workspace package names; marks the “current” one with `★`
+- **`functions/pnf.fish`**: interactive “pnpm filter” runner (multi-select), runs `pnpm -F <pkg> ...`
+- **`functions/pnx.fish`**: run arbitrary commands inside selected workspaces via `pnpm -F <pkg> exec -- ...`
+- **`functions/pnc.fish`**: destructive cleanup, removes all `node_modules` recursively
+- **`conf.d/pnpm_workspace.fish`**: interactive-only abbreviations for common `pnf` workflows
 
-- **Themed UI**: Custom double-border interface with high-contrast colors.
-- **Context Aware**: Automatically detects if you are inside a sub-project and marks it with `★`.
-- **Live Command Preview**: Real-time visualization of the final command including all selected filters.
-- **Multi-select**: Use `Tab` to select multiple workspaces for batch operations.
+#### Commands
 
----
+| Command       | Description                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| `pnf <args…>` | pick one or more workspace packages and run `pnpm -F ... <args…>` |
+| `pnx <cmd…>`  | pick workspaces and run `pnpm -F <pkg> exec -- <cmd…>`            |
+| `pnc`         | remove all `node_modules` under the current directory             |
 
-## 🛠 Commands & Abbreviations
+#### Abbreviations (interactive only)
 
-| Command     | Description                                                                    |
-| ----------- | ------------------------------------------------------------------------------ |
-| `pnf <cmd>` | Interactively select workspace(s) and run `pnpm -F <pkg> <cmd>`                |
-| `pnx <cmd>` | Run raw shell commands (e.g., `ls`, `touch`) inside selected workspace folders |
-| `pnc`       | **Deep Clean**: Recursively removes all `node_modules` in the entire workspace |
+Defined in `conf.d/pnpm_workspace.fish`:
 
-### Built-in Abbreviations
-
+- `pni` → `pnpm install`
 - `pna` → `pnf add`
 - `pnu` → `pnf remove`
 - `pnd` → `pnf run dev`
 - `pnb` → `pnf run build`
+- `pnt` → `pnf test`
 
----
+### Prefix toggling + key binding
 
-## 🖥 Preview in Action
+- **`functions/with_prefix.fish`**: toggles a prefix on the current commandline (adds it if missing, removes it if already present)
+- **`functions/with_prefix_bind.fish`**: binds a key sequence to `with_prefix "<prefix>"`
+- **`completions/with_prefix_bind.fish`**: completions for `with_prefix_bind`
 
-When you type `pna -D tailwindcss`, the preview pane will show:
+#### Usage
 
-> `pnpm -F @scope/app -F @scope/ui add -D tailwindcss`
+Toggle a prefix manually:
+
+```fish
+with_prefix "proxychains -q"
+```
+
+Bind a key (get the key sequence via `fish_key_reader`):
+
+```fish
+with_prefix_bind \e\[80\;2u "proxychains -q"
+```
+
+### Proxychains preset
+
+- **`conf.d/proxychains_prefix.fish`**: sets up a keybind that toggles `proxychains -q` using `with_prefix_bind`
+
+If you don’t like the default key sequence, edit `conf.d/proxychains_prefix.fish` and change the first argument.
+
+## Notes / safety
+
+- **`pnc` is destructive**: it runs `rm -rf` on every `node_modules` directory it finds under the current directory.
